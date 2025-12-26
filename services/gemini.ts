@@ -4,7 +4,7 @@
 */
 
 
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { extractHtmlFromText } from "../utils/html";
 
 // Initialize Gemini Client
@@ -33,23 +33,23 @@ export const generateImage = async (prompt: string, aspectRatio: string = '1:1',
         ],
       },
       config: {
-        responseModalities: [
-            'IMAGE',
-        ],
         imageConfig: {
           aspectRatio: aspectRatio,
         },
       },
     });
 
-    const part = response.candidates?.[0]?.content?.parts?.[0];
-    if (part && part.inlineData) {
-        const base64ImageBytes = part.inlineData.data;
-        const mimeType = part.inlineData.mimeType || 'image/png';
-        return `data:${mimeType};base64,${base64ImageBytes}`;
-    } else {
-      throw new Error("No image generated.");
+    if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          const base64ImageBytes = part.inlineData.data;
+          const mimeType = part.inlineData.mimeType || 'image/png';
+          return `data:${mimeType};base64,${base64ImageBytes}`;
+        }
+      }
     }
+    
+    throw new Error("No image generated.");
   } catch (error) {
     console.error("Image generation failed:", error);
     throw error;
